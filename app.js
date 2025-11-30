@@ -1,12 +1,12 @@
-// app.js — updated to POST to your Google Apps Script web app and fix Skip + modal behavior.
-//
+// Full client app.js — posts the one-time info directly to your Apps Script web app (no email service).
 // IMPORTANT:
-// - Replace CLIENT_SECRET with the exact SECRET_TOKEN string you put into Code.gs.
-// - WEBAPP_URL already set to your deployed webapp URL.
-// - Paste this file into your repo (replace existing app.js) or ask me to push it for you.
+// 1) WEBAPP_URL already set to your deployed web app exec URL.
+// 2) CLIENT_SECRET below MUST match SECRET_TOKEN in the Apps Script above.
+//    Currently it is set to the same generated token used in Code.gs.
+//    If you change the token in Code.gs, update CLIENT_SECRET here to the exact same string.
 
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxDfMvKSUDw5GxU2gH_iuA1NTa3U3FXEfzmjcO7iYOwdSH25dmhkDtbP0x6ckV0h4rT7w/exec';
-const CLIENT_SECRET = 'REPLACE_WITH_THE_SAME_SECRET_TOKEN'; // <<--- REPLACE THIS with your SECRET_TOKEN from Code.gs
+const CLIENT_SECRET = 'r8F3kL9pQw2Zx7VcN1tYb5GhR4sU0mW2'; // <<< KEEP IN SYNC with Code.gs SECRET_TOKEN
 
 // DOM refs
 const fileInput = document.getElementById('file');

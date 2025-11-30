@@ -1,12 +1,14 @@
-// app.js — EmailJS integration, reliable Skip, close modal on success,
-// and keep the existing client-side image compression functionality.
+// app.js — updated to POST to your Google Apps Script web app and fix Skip + modal behavior.
+//
+// IMPORTANT:
+// - Replace CLIENT_SECRET with the exact SECRET_TOKEN string you put into Code.gs.
+// - WEBAPP_URL already set to your deployed webapp URL.
+// - Paste this file into your repo (replace existing app.js) or ask me to push it for you.
 
-// --- Config: replace these with your EmailJS values ---
-const EMAILJS_SERVICE_ID = 'SERVICE_ID_REPLACE_ME';
-const EMAILJS_TEMPLATE_ID = 'TEMPLATE_ID_REPLACE_ME';
-// public key is set in index.html emailjs.init('PUBLIC_KEY')
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxDfMvKSUDw5GxU2gH_iuA1NTa3U3FXEfzmjcO7iYOwdSH25dmhkDtbP0x6ckV0h4rT7w/exec';
+const CLIENT_SECRET = 'REPLACE_WITH_THE_SAME_SECRET_TOKEN'; // <<--- REPLACE THIS with your SECRET_TOKEN from Code.gs
 
-// --- DOM refs ---
+// DOM refs
 const fileInput = document.getElementById('file');
 const dropzone = document.getElementById('dropzone');
 const chooseBtn = document.getElementById('chooseBtn');
@@ -28,18 +30,17 @@ const infoForm = document.getElementById('infoForm');
 const skipInfo = document.getElementById('skipInfo');
 
 const STRIPE_DONATE = 'https://buy.stripe.com/5kAg0J0co1MF7Ic8wy';
-const CONTACT_EMAIL = 'info.geniusplugtechnology@gmail.com'; // for reference
 
 let items = []; // image items list
 
-// --- small helpers ---
+// Helpers
 function uid(){ return Math.random().toString(36).slice(2,9) }
 function updateQualityLabel(){ qualityVal.textContent = parseFloat(qualitySlider.value).toFixed(2) }
 qualitySlider.addEventListener('input', updateQualityLabel);
 updateQualityLabel();
 yearSpan.textContent = new Date().getFullYear();
 
-// --- donate/contact animations ---
+// Donate/contact animations
 donateBtn.addEventListener('click', ()=> {
   donateBtn.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 420, easing: 'ease-out' });
   window.open(STRIPE_DONATE, '_blank');
@@ -49,7 +50,7 @@ contactBtn.addEventListener('click', ()=> {
   window.open('https://wa.me/8801761487193', '_blank');
 });
 
-// --- file handling & gallery (unchanged behavior) ---
+// File handling & gallery
 chooseBtn.addEventListener('click', ()=> fileInput.click());
 fileInput.addEventListener('change', e => addFiles(e.target.files));
 ['dragenter','dragover','dragleave','drop'].forEach(evt => {
@@ -121,60 +122,76 @@ window.addEventListener('beforeunload', ()=>{ items.forEach(i=>{ try{ URL.revoke
 // clear button
 clearBtn.addEventListener('click', ()=>{ items.forEach(i=>{ try{ URL.revokeObjectURL(i.url)}catch{} }); items=[]; renderGallery(); });
 
-// ---------- One-time info form (EmailJS) ----------
+// ---------- One-time info form -> Google Sheet webapp ----------
 const INFO_KEY = 'geniusplug_user_info_v1';
-function hasSubmittedInfo(){ try{ return !!localStorage.getItem(INFO_KEY); }catch(e){ return false; } }
-function showInfoModalIfNeeded(){ if(!hasSubmittedInfo()){ infoModal.hidden=false; infoModal.style.display='flex'; } }
 
-// Improved Skip handler: store flag and hide modal
+function hasSubmittedInfo(){ try{ return !!localStorage.getItem(INFO_KEY); }catch(e){ return false; } }
+function showModal(){ infoModal.hidden = false; infoModal.style.display = 'flex'; }
+function hideModal(){ infoModal.hidden = true; infoModal.style.display = 'none'; }
+
+function showInfoModalIfNeeded(){ if(!hasSubmittedInfo()){ showModal(); } }
+
+// Skip: store skip flag and hide modal reliably
 skipInfo.addEventListener('click', () => {
   try{ localStorage.setItem(INFO_KEY, JSON.stringify({ skipped: true, ts: new Date().toISOString() })); }catch(e){ /* ignore */ }
-  // hide modal visually
-  infoModal.hidden = true;
-  infoModal.style.display = 'none';
+  hideModal();
 });
 
-// Form submit: send via EmailJS (no activation mail), hide modal on success
+// Form submit -> POST to Apps Script web app
 infoForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const submitBtn = infoForm.querySelector('button[type="submit"]');
-  const fd = new FormData(infoForm);
-  const data = Object.fromEntries(fd.entries());
-  // Basic validation
-  if(!data.name || !data.email || !data.whatsapp){
-    alert('Please fill name, email and WhatsApp.');
+  if (!WEBAPP_URL || WEBAPP_URL.includes('REPLACE_WITH')) {
+    alert('Form endpoint not configured. Please set WEBAPP_URL in app.js.');
+    return;
+  }
+  if (!CLIENT_SECRET || CLIENT_SECRET.includes('REPLACE_WITH')) {
+    alert('Client secret not configured. Set CLIENT_SECRET in app.js to match Code.gs SECRET_TOKEN.');
     return;
   }
 
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Sending...';
+  const submitBtn = infoForm.querySelector('button[type="submit"]');
+  const fd = new FormData(infoForm);
+  const data = {
+    name: fd.get('name') || '',
+    email: fd.get('email') || '',
+    whatsapp: fd.get('whatsapp') || '',
+    address: fd.get('address') || '',
+    secret: CLIENT_SECRET
+  };
+
+  // Basic validation
+  if (!data.name || !data.email || !data.whatsapp) {
+    alert('Please fill Name, Email and WhatsApp.');
+    return;
+  }
 
   try {
-    if(!window.emailjs){
-      throw new Error('EmailJS not loaded. Make sure email.min.js is included and emailjs.init(PUBLIC_KEY) was called.');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+
+    const resp = await fetch(WEBAPP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    const json = await resp.json().catch(()=>({ ok: resp.ok }));
+
+    if (resp.ok && json && json.ok) {
+      // Save locally so modal won't show again
+      try{ localStorage.setItem(INFO_KEY, JSON.stringify({ ...data, ts: new Date().toISOString() })); }catch(e){ /* ignore */ }
+
+      // Close modal and let the user continue
+      hideModal();
+      // Optional small success toast (console for now)
+      console.log('Info saved to spreadsheet.');
+    } else {
+      const msg = (json && json.error) ? json.error : 'Submission failed';
+      alert('Submit failed: ' + msg);
     }
-
-    // Template params must match what you configured in EmailJS template
-    const templateParams = {
-      name: data.name,
-      email: data.email,
-      whatsapp: data.whatsapp,
-      address: data.address || ''
-    };
-
-    // send using EmailJS
-    const resp = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
-
-    // success: persist locally and hide modal
-    try{ localStorage.setItem(INFO_KEY, JSON.stringify({ ...templateParams, ts: new Date().toISOString() })); }catch(e){ /* ignore */ }
-
-    infoModal.hidden = true;
-    infoModal.style.display = 'none';
-    alert('Thank you — your information was submitted. You can now use the tool.');
-
-  } catch(err){
-    console.error('Email send error', err);
-    alert('Submission failed: ' + (err && err.text ? err.text : (err.message || 'Unknown error')));
+  } catch (err) {
+    console.error('Submit error', err);
+    alert('Submit failed: ' + (err && err.message ? err.message : err));
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = 'Submit';

@@ -1,7 +1,7 @@
 # Image Compress (Client-side)
 
 A minimal, client-side image compression web app you can host for free. Everything runs in the browser — no server, no upload, no hosting cost beyond static hosting.
-
+https://geniusplug.github.io/Image-Compress-Free-Tool/
 Features
 - Drag & drop or file picker
 - Choose output format (JPEG, WebP, PNG)

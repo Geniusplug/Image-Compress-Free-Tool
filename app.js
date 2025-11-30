@@ -1,4 +1,12 @@
+// app.js — EmailJS integration, reliable Skip, close modal on success,
+// and keep the existing client-side image compression functionality.
 
+// --- Config: replace these with your EmailJS values ---
+const EMAILJS_SERVICE_ID = 'SERVICE_ID_REPLACE_ME';
+const EMAILJS_TEMPLATE_ID = 'TEMPLATE_ID_REPLACE_ME';
+// public key is set in index.html emailjs.init('PUBLIC_KEY')
+
+// --- DOM refs ---
 const fileInput = document.getElementById('file');
 const dropzone = document.getElementById('dropzone');
 const chooseBtn = document.getElementById('chooseBtn');
@@ -14,36 +22,36 @@ const donateBtn = document.getElementById('donateBtn');
 const contactBtn = document.getElementById('contactBtn');
 const yearSpan = document.getElementById('year');
 
+// modal elements
 const infoModal = document.getElementById('infoModal');
 const infoForm = document.getElementById('infoForm');
 const skipInfo = document.getElementById('skipInfo');
 
 const STRIPE_DONATE = 'https://buy.stripe.com/5kAg0J0co1MF7Ic8wy';
-const CONTACT_EMAIL = 'info.geniusplugtechnology@gmail.com'; // destination email for form submissions
+const CONTACT_EMAIL = 'info.geniusplugtechnology@gmail.com'; // for reference
 
-let items = []; // {id,file,url,compressedBlob,status,progress}
+let items = []; // image items list
 
+// --- small helpers ---
 function uid(){ return Math.random().toString(36).slice(2,9) }
-
 function updateQualityLabel(){ qualityVal.textContent = parseFloat(qualitySlider.value).toFixed(2) }
 qualitySlider.addEventListener('input', updateQualityLabel);
 updateQualityLabel();
-
 yearSpan.textContent = new Date().getFullYear();
 
+// --- donate/contact animations ---
 donateBtn.addEventListener('click', ()=> {
   donateBtn.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 420, easing: 'ease-out' });
   window.open(STRIPE_DONATE, '_blank');
 });
-
 contactBtn.addEventListener('click', ()=> {
   contactBtn.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-6px)' }, { transform: 'translateY(0)' }], { duration: 340 });
   window.open('https://wa.me/8801761487193', '_blank');
 });
 
+// --- file handling & gallery (unchanged behavior) ---
 chooseBtn.addEventListener('click', ()=> fileInput.click());
 fileInput.addEventListener('change', e => addFiles(e.target.files));
-
 ['dragenter','dragover','dragleave','drop'].forEach(evt => {
   dropzone.addEventListener(evt, e => {
     e.preventDefault(); e.stopPropagation();
@@ -110,14 +118,23 @@ function downloadBlob(blob,filename){ const url=URL.createObjectURL(blob); const
 
 window.addEventListener('beforeunload', ()=>{ items.forEach(i=>{ try{ URL.revokeObjectURL(i.url)}catch{} }); });
 
+// clear button
 clearBtn.addEventListener('click', ()=>{ items.forEach(i=>{ try{ URL.revokeObjectURL(i.url)}catch{} }); items=[]; renderGallery(); });
 
+// ---------- One-time info form (EmailJS) ----------
 const INFO_KEY = 'geniusplug_user_info_v1';
-
 function hasSubmittedInfo(){ try{ return !!localStorage.getItem(INFO_KEY); }catch(e){ return false; } }
+function showInfoModalIfNeeded(){ if(!hasSubmittedInfo()){ infoModal.hidden=false; infoModal.style.display='flex'; } }
 
-function showInfoModalIfNeeded(){ if(!hasSubmittedInfo()){ infoModal.hidden=false; } }
+// Improved Skip handler: store flag and hide modal
+skipInfo.addEventListener('click', () => {
+  try{ localStorage.setItem(INFO_KEY, JSON.stringify({ skipped: true, ts: new Date().toISOString() })); }catch(e){ /* ignore */ }
+  // hide modal visually
+  infoModal.hidden = true;
+  infoModal.style.display = 'none';
+});
 
+// Form submit: send via EmailJS (no activation mail), hide modal on success
 infoForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const submitBtn = infoForm.querySelector('button[type="submit"]');
@@ -133,42 +150,39 @@ infoForm.addEventListener('submit', async (e) => {
   submitBtn.textContent = 'Sending...';
 
   try {
-    const endpoint = `https://formsubmit.co/ajax/${encodeURIComponent(CONTACT_EMAIL)}`;
-    const resp = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(data)
-    });
-
-    const json = await resp.json().catch(()=>({ ok: resp.ok }));
-
-    if(resp.ok){
-      // store so we don't ask again
-      const record = { ...data, ts: new Date().toISOString() };
-      try{ localStorage.setItem(INFO_KEY, JSON.stringify(record)); }catch(e){ /* ignore localStorage errors */ }
-      infoModal.hidden = true;
-      alert('Thank you — your information was sent. (Note: verify info.geniusplugtechnology@gmail.com in FormSubmit if this is the first submission.)');
-    } else {
-      const msg = (json && json.message) ? json.message : 'Failed to send. Please try again.';
-      alert('Send failed: ' + msg);
+    if(!window.emailjs){
+      throw new Error('EmailJS not loaded. Make sure email.min.js is included and emailjs.init(PUBLIC_KEY) was called.');
     }
+
+    // Template params must match what you configured in EmailJS template
+    const templateParams = {
+      name: data.name,
+      email: data.email,
+      whatsapp: data.whatsapp,
+      address: data.address || ''
+    };
+
+    // send using EmailJS
+    const resp = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+
+    // success: persist locally and hide modal
+    try{ localStorage.setItem(INFO_KEY, JSON.stringify({ ...templateParams, ts: new Date().toISOString() })); }catch(e){ /* ignore */ }
+
+    infoModal.hidden = true;
+    infoModal.style.display = 'none';
+    alert('Thank you — your information was submitted. You can now use the tool.');
+
   } catch(err){
-    console.error('submit error', err);
-    alert('Send failed: ' + (err.message || err));
+    console.error('Email send error', err);
+    alert('Submission failed: ' + (err && err.text ? err.text : (err.message || 'Unknown error')));
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = 'Submit';
   }
 });
 
-skipInfo.addEventListener('click', () => {
-  try{ localStorage.setItem(INFO_KEY, 'skipped'); }catch(e){ /* ignore */ }
-  infoModal.hidden = true;
-});
-
+// show modal after small delay if needed
 setTimeout(showInfoModalIfNeeded, 1200);
 
+// initial render
 renderGallery();

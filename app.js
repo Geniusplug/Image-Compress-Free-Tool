@@ -3,8 +3,8 @@
 // - WEBAPP_URL is set to your deployed web app exec URL (already filled).
 // - Replace CLIENT_SECRET below with the exact SECRET_TOKEN from Code.gs.
 
-const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxDfMvKSUDw5GxU2gH_iuA1NTa3U3FXEfzmjcO7iYOwdSH25dmhkDtbP0x6ckV0h4rT7w/exec';
-const CLIENT_SECRET = 'REPLACE_WITH_THE_SAME_SECRET_TOKEN'; // <<--- REPLACE THIS with your SECRET_TOKEN from Code.gs
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxhFqmMlXly2vHmhDOOnmE52N8urOCTsYufsx89yPPmOeWlOtyZ7fe5dXIe3lP_EVmY4Q/exec';
+const CLIENT_SECRET = '1bPwK6COzJCSFBOLUuTjPkoqzMhZBnVkyC2_JMzNJMGxThOW65HAn1_nn'; // <<--- REPLACE THIS with your SECRET_TOKEN from Code.gs
 
 // DOM refs
 const fileInput = document.getElementById('file');

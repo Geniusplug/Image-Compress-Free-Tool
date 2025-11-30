@@ -1,12 +1,10 @@
-// Full client app.js — posts the one-time info directly to your Apps Script web app (no email service).
+// Full client app.js — posts one-time info to Google Apps Script Web App (form-encoded).
 // IMPORTANT:
-// 1) WEBAPP_URL already set to your deployed web app exec URL.
-// 2) CLIENT_SECRET below MUST match SECRET_TOKEN in the Apps Script above.
-//    Currently it is set to the same generated token used in Code.gs.
-//    If you change the token in Code.gs, update CLIENT_SECRET here to the exact same string.
+// - WEBAPP_URL is set to your deployed web app exec URL (already filled).
+// - Replace CLIENT_SECRET below with the exact SECRET_TOKEN from Code.gs.
 
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxDfMvKSUDw5GxU2gH_iuA1NTa3U3FXEfzmjcO7iYOwdSH25dmhkDtbP0x6ckV0h4rT7w/exec';
-const CLIENT_SECRET = '1bPwK6COzJCSFBOLUuTjPkoqzMhZBnVkyC2_JMzNJMGxThOW65HAn1_nn'; // <<< KEEP IN SYNC with Code.gs SECRET_TOKEN
+const CLIENT_SECRET = 'REPLACE_WITH_THE_SAME_SECRET_TOKEN'; // <<--- REPLACE THIS with your SECRET_TOKEN from Code.gs
 
 // DOM refs
 const fileInput = document.getElementById('file');
@@ -137,7 +135,7 @@ skipInfo.addEventListener('click', () => {
   hideModal();
 });
 
-// Form submit -> POST to Apps Script web app
+// Form submit -> POST to Apps Script web app (form-encoded to avoid preflight)
 infoForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!WEBAPP_URL || WEBAPP_URL.includes('REPLACE_WITH')) {
@@ -149,14 +147,13 @@ infoForm.addEventListener('submit', async (e) => {
     return;
   }
 
-  const submitBtn = infoForm.querySelector('button[type="submit"]');
+  const submitBtn = infoForm.querySelector('button[type=\"submit\"]');
   const fd = new FormData(infoForm);
   const data = {
     name: fd.get('name') || '',
     email: fd.get('email') || '',
     whatsapp: fd.get('whatsapp') || '',
-    address: fd.get('address') || '',
-    secret: CLIENT_SECRET
+    address: fd.get('address') || ''
   };
 
   // Basic validation
@@ -169,21 +166,24 @@ infoForm.addEventListener('submit', async (e) => {
     submitBtn.disabled = true;
     submitBtn.textContent = 'Sending...';
 
+    // Build form-encoded body (no custom Content-Type headers)
+    const params = new URLSearchParams();
+    params.append('name', data.name);
+    params.append('email', data.email);
+    params.append('whatsapp', data.whatsapp);
+    params.append('address', data.address);
+    params.append('secret', CLIENT_SECRET);
+
     const resp = await fetch(WEBAPP_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      body: params
     });
 
     const json = await resp.json().catch(()=>({ ok: resp.ok }));
 
     if (resp.ok && json && json.ok) {
-      // Save locally so modal won't show again
       try{ localStorage.setItem(INFO_KEY, JSON.stringify({ ...data, ts: new Date().toISOString() })); }catch(e){ /* ignore */ }
-
-      // Close modal and let the user continue
       hideModal();
-      // Optional small success toast (console for now)
       console.log('Info saved to spreadsheet.');
     } else {
       const msg = (json && json.error) ? json.error : 'Submission failed';

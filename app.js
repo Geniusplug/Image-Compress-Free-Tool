@@ -31,13 +31,17 @@ updateQualityLabel();
 
 yearSpan.textContent = new Date().getFullYear();
 
-donateBtn.addEventListener('click', ()=> window.open(STRIPE_DONATE, '_blank'));
-contactBtn.addEventListener('click', ()=> openContact);
+donateBtn.addEventListener('click', ()=> {
+  // subtle button pulse and open donate
+  donateBtn.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 420, easing: 'ease-out' });
+  window.open(STRIPE_DONATE, '_blank');
+});
 
-function openContact(){
-  // open WhatsApp as primary contact
+contactBtn.addEventListener('click', ()=> {
+  // open whatsapp as primary contact
+  contactBtn.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-6px)' }, { transform: 'translateY(0)' }], { duration: 340 });
   window.open('https://wa.me/8801761487193', '_blank');
-}
+});
 
 chooseBtn.addEventListener('click', ()=> fileInput.click());
 fileInput.addEventListener('change', e => addFiles(e.target.files));

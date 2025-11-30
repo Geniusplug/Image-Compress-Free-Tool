@@ -19,7 +19,7 @@ const infoForm = document.getElementById('infoForm');
 const skipInfo = document.getElementById('skipInfo');
 
 const STRIPE_DONATE = 'https://buy.stripe.com/5kAg0J0co1MF7Ic8wy';
-const CONTACT_EMAIL = 'info.geniusplugtechnology@gmail.com';
+const CONTACT_EMAIL = 'info.geniusplugtechnology@gmail.com'; // destination email for form submissions
 
 let items = []; // {id,file,url,compressedBlob,status,progress}
 
@@ -32,13 +32,11 @@ updateQualityLabel();
 yearSpan.textContent = new Date().getFullYear();
 
 donateBtn.addEventListener('click', ()=> {
-  // subtle button pulse and open donate
   donateBtn.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 420, easing: 'ease-out' });
   window.open(STRIPE_DONATE, '_blank');
 });
 
 contactBtn.addEventListener('click', ()=> {
-  // open whatsapp as primary contact
   contactBtn.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-6px)' }, { transform: 'translateY(0)' }], { duration: 340 });
   window.open('https://wa.me/8801761487193', '_blank');
 });
@@ -115,13 +113,61 @@ window.addEventListener('beforeunload', ()=>{ items.forEach(i=>{ try{ URL.revoke
 clearBtn.addEventListener('click', ()=>{ items.forEach(i=>{ try{ URL.revokeObjectURL(i.url)}catch{} }); items=[]; renderGallery(); });
 
 const INFO_KEY = 'geniusplug_user_info_v1';
+
 function hasSubmittedInfo(){ try{ return !!localStorage.getItem(INFO_KEY); }catch(e){ return false; } }
 
 function showInfoModalIfNeeded(){ if(!hasSubmittedInfo()){ infoModal.hidden=false; } }
 
-infoForm.addEventListener('submit',(e)=>{ e.preventDefault(); const fd=new FormData(infoForm); const data={ name: fd.get('name'), email: fd.get('email'), whatsapp: fd.get('whatsapp'), address: fd.get('address'), ts: new Date().toISOString() }; try{ localStorage.setItem(INFO_KEY, JSON.stringify(data)); }catch(e){ console.warn('localStorage failed',e); } const subject = encodeURIComponent('User Info Submission - Image Compress'); const body = encodeURIComponent(`Name: ${data.name}\nEmail: ${data.email}\nWhatsApp: ${data.whatsapp}\nAddress: ${data.address}\nTime: ${data.ts}`); const mailto = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`; window.location.href = mailto; infoModal.hidden=true; alert('Thank you! A mail client has been opened to send your info.'); });
+infoForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const submitBtn = infoForm.querySelector('button[type="submit"]');
+  const fd = new FormData(infoForm);
+  const data = Object.fromEntries(fd.entries());
+  // Basic validation
+  if(!data.name || !data.email || !data.whatsapp){
+    alert('Please fill name, email and WhatsApp.');
+    return;
+  }
 
-skipInfo.addEventListener('click', ()=>{ infoModal.hidden=true; try{ localStorage.setItem(INFO_KEY, 'skipped'); }catch{} });
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Sending...';
+
+  try {
+    const endpoint = `https://formsubmit.co/ajax/${encodeURIComponent(CONTACT_EMAIL)}`;
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    const json = await resp.json().catch(()=>({ ok: resp.ok }));
+
+    if(resp.ok){
+      // store so we don't ask again
+      const record = { ...data, ts: new Date().toISOString() };
+      try{ localStorage.setItem(INFO_KEY, JSON.stringify(record)); }catch(e){ /* ignore localStorage errors */ }
+      infoModal.hidden = true;
+      alert('Thank you — your information was sent. (Note: verify info.geniusplugtechnology@gmail.com in FormSubmit if this is the first submission.)');
+    } else {
+      const msg = (json && json.message) ? json.message : 'Failed to send. Please try again.';
+      alert('Send failed: ' + msg);
+    }
+  } catch(err){
+    console.error('submit error', err);
+    alert('Send failed: ' + (err.message || err));
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit';
+  }
+});
+
+skipInfo.addEventListener('click', () => {
+  try{ localStorage.setItem(INFO_KEY, 'skipped'); }catch(e){ /* ignore */ }
+  infoModal.hidden = true;
+});
 
 setTimeout(showInfoModalIfNeeded, 1200);
 

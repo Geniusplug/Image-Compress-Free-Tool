@@ -3,7 +3,52 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Image Compress — Geniusplug</title>
+  <title>Image Compress — Free Online Image Compressor | Geniusplug</title>
+
+  <!-- Primary SEO -->
+  <meta name="description" content="Image Compress — Free, fast, client-side image compressor. Compress JPEG, PNG and WebP images in your browser without uploading. Quick previews, batch processing and download.">
+  <meta name="keywords" content="image compressor, image compress, compress images, jpeg compressor, webp compressor, png compressor, free image tool, Geniusplug">
+  <meta name="robots" content="index, follow">
+
+  <!-- Canonical (replace with your site URL if you serve the app from a custom domain) -->
+  <link rel="canonical" href="https://geniusplug.github.io/Image-Compress-Free-Tool">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Image Compress — Free Online Image Compressor | Geniusplug" />
+  <meta property="og:description" content="Compress JPEG, PNG and WebP images locally in your browser. Fast, free and no uploads — keep privacy while saving bandwidth." />
+  <meta property="og:url" content="https://your-site.example.com/" />
+  <meta property="og:site_name" content="Geniusplug — Image Compress" />
+  <meta property="og:image" content="https://your-site.example.com/og-image.png" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Image Compress — Free Online Image Compressor | Geniusplug" />
+  <meta name="twitter:description" content="Compress images in your browser (JPEG, PNG, WebP). Batch support, previews, and downloads — no uploads, no tracking." />
+  <meta name="twitter:image" content="https://your-site.example.com/og-image.png" />
+
+  <!-- Misc -->
+  <meta name="theme-color" content="#6A1B9A" />
+  <meta name="author" content="Geniusplug" />
+
+  <!-- Structured data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Image Compress",
+    "url": "https://your-site.example.com/",
+    "description": "Compress JPEG, PNG and WebP images locally in the browser. Fast, free and private.",
+    "applicationCategory": "Utilities",
+    "operatingSystem": "All",
+    "creator": {
+      "@type": "Person",
+      "name": "Geniusplug"
+    }
+  }
+  </script>
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -17,7 +62,6 @@
       <div class="cta">
         <button id="donateBtn" class="btn btn-donate" aria-label="Donate">
           <span class="icon" aria-hidden="true">
-            <!-- heart icon -->
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7.5-4.75-9.5-7.25C-0.5 8.5 4 4 7.5 6c2 1.25 2.5 3.5 4.5 3.5s2.5-2.25 4.5-3.5C20 4 24.5 8.5 21.5 13.75 19.5 16.25 12 21 12 21z" fill="#fff" /></svg>
           </span>
           <span class="txt">Donate</span>
@@ -25,7 +69,6 @@
 
         <button id="contactBtn" class="btn btn-contact" aria-label="Contact">
           <span class="icon" aria-hidden="true">
-            <!-- chat icon -->
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H8l-5 3V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="#fff"/></svg>
           </span>
           <span class="txt">Contact</span>
@@ -86,7 +129,6 @@
   <!-- Floating social/contact actions with icons -->
   <div class="fab-group" aria-hidden="true">
     <a class="fab" id="waFab" href="https://wa.me/8801761487193" target="_blank" title="WhatsApp" rel="noreferrer">
-      <!-- WhatsApp icon -->
       <svg viewBox="0 0 24 24"><path fill="#fff" d="M20.5 3.5A11 11 0 1 0 12 23c1.9 0 3.7-.5 5.3-1.4L23 23l-1.5-5.7A10.9 10.9 0 0 0 22 7.5 11 11 0 0 0 20.5 3.5zM12 20.5a8.4 8.4 0 0 1-4-.9L8 17.7l.7-1.6A8.3 8.3 0 1 1 12 20.5z"/></svg>
     </a>
 
@@ -120,10 +162,6 @@
       </form>
     </div>
   </div>
-
-  <!-- EmailJS SDK (replace PUBLIC_KEY with your EmailJS public key) -->
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script>emailjs.init('PUBLIC_KEY_REPLACE_ME');</script>
 
   <script src="app.js"></script>
 </body>

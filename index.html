@@ -3,22 +3,29 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Image Compress Free</title>
+  <title>Image Compress — Geniusplug</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="container">
-    <header>
-      <h1>Image Compress Free </h1>
+    <header class="hero">
+      <div class="brand">
+        <h1>Image Compress</h1>
+        <p class="tag">• Free • Fast</p>
+      </div>
+      <div class="cta">
+        <button id="donateBtn" class="btn btn-accent">Donate</button>
+        <button id="contactBtn" class="btn btn-outline">Contact</button>
+      </div>
     </header>
 
-    <section class="uploader-card">
+    <section class="card uploader-card">
       <div id="dropzone" class="dropzone" tabindex="0">
         <input id="file" type="file" accept="image/*" multiple />
         <div class="drop-inner">
           <strong>Drop images here</strong>
           <span>or <button id="chooseBtn" class="link-btn">choose files</button></span>
-          <small>Supports multiple images • Previews & download</small>
+          <small>Multiple images supported • Previews & download</small>
         </div>
       </div>
 
@@ -39,8 +46,8 @@
           <input id="maxWidth" type="number" min="0" placeholder="0 = keep original" />
         </label>
 
-        <button id="compressBtn" class="primary">Compress Selected</button>
-        <button id="clearBtn" class="muted">Clear All</button>
+        <button id="compressBtn" class="btn btn-primary">Compress Selected</button>
+        <button id="clearBtn" class="btn btn-muted">Clear All</button>
       </div>
     </section>
 
@@ -49,6 +56,7 @@
       <div id="gallery" class="gallery">
         <div class="empty">No images selected</div>
       </div>
+
       <div id="globalProgress" class="global-progress" hidden>
         <div class="bar"><div class="pos" style="width:0%"></div></div>
         <div class="global-info">0 / 0</div>
@@ -56,9 +64,36 @@
     </section>
 
     <footer class="foot">
-      <p>System Develop by MD Roman Sarkar (Geniusplug Technology)</p>
+      <div class="foot-left">© <span id="year"></span> Geniusplug</div>
+      <div class="foot-right">Built with ❤️ — All processing in your browser</div>
     </footer>
   </main>
+
+  <!-- Floating social/contact actions -->
+  <div class="fab-group">
+    <a class="fab" id="waFab" href="https://wa.me/8801761487193" target="_blank" title="WhatsApp">WA</a>
+    <a class="fab" id="siteFab" href="https://www.romansarkar.com" target="_blank" title="Website">Site</a>
+    <a class="fab" id="fbFab" href="https://www.facebook.com/Engineer.romansarkar" target="_blank" title="Facebook">FB</a>
+    <a class="fab" id="lnFab" href="https://www.linkedin.com/in/romansarkar/" target="_blank" title="LinkedIn">IN</a>
+  </div>
+
+  <!-- One-time user info modal -->
+  <div id="infoModal" class="modal" hidden>
+    <div class="modal-card animate-pop">
+      <h3>Quick Info</h3>
+      <p>Please submit your contact info once so we can follow up.</p>
+      <form id="infoForm">
+        <label>Name <input name="name" required /></label>
+        <label>Email <input name="email" type="email" required /></label>
+        <label>WhatsApp <input name="whatsapp" required /></label>
+        <label>Address <input name="address" /></label>
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary">Submit</button>
+          <button type="button" id="skipInfo" class="btn btn-muted">Skip</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>

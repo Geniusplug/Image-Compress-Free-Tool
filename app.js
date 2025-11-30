@@ -1,8 +1,8 @@
-// app.js — full client app: image compression UI + one-time info modal.
-// This version SUBMITS modal data to a Google Form via a hidden iframe (no server required).
-// IMPORTANT: Replace FORM_ID and ENTRY_* values below with your Google Form IDs.
+// app.js — full client app: image compression UI + one-time info modal submitted to Google Form
+// AFTER SUBMIT shows a success toast with quick actions.
+// IMPORTANT: Replace FORM_ID and ENTRY_* with your Google Form values.
 
-const FORM_ID = 'REPLACE_FORM_ID';
+const FORM_ID = '1voaXxzZQOkaAEd2mErnz0BPIwcOrp3QtB2cT1Y8NCOE';
 const FORM_ACTION = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
 
 // Replace these with the entry.* names from your Google Form (inspect the form fields)
@@ -10,6 +10,9 @@ const ENTRY_NAME = 'entry.REPLACE_NAME_ID';
 const ENTRY_EMAIL = 'entry.REPLACE_EMAIL_ID';
 const ENTRY_WHATSAPP = 'entry.REPLACE_WHATSAPP_ID';
 const ENTRY_ADDRESS = 'entry.REPLACE_ADDRESS_ID';
+
+const STRIPE_DONATE = 'https://buy.stripe.com/5kAg0J0co1MF7Ic8wy';
+const OTHER_WORK_URL = 'https://www.romansarkar.com'; // change if you want a different link
 
 // DOM refs
 const fileInput = document.getElementById('file');
@@ -31,8 +34,6 @@ const yearSpan = document.getElementById('year');
 const infoModal = document.getElementById('infoModal');
 const infoForm = document.getElementById('infoForm');
 const skipInfo = document.getElementById('skipInfo');
-
-const STRIPE_DONATE = 'https://buy.stripe.com/5kAg0J0co1MF7Ic8wy';
 
 let items = []; // image items list
 
@@ -134,7 +135,38 @@ function hideModal(){ infoModal.hidden = true; infoModal.style.display = 'none';
 
 function showInfoModalIfNeeded(){ if(!hasSubmittedInfo()){ showModal(); } }
 
-// Skip: store skip flag and hide modal reliably
+// create success toast (re-usable)
+function ensureSuccessToast(){
+  if(document.getElementById('successToast')) return;
+  const t = document.createElement('div');
+  t.id = 'successToast';
+  t.style.position = 'fixed';
+  t.style.right = '18px';
+  t.style.bottom = '18px';
+  t.style.zIndex = 9999;
+  t.style.background = 'rgba(30,30,30,0.95)';
+  t.style.color = '#fff';
+  t.style.padding = '12px 14px';
+  t.style.borderRadius = '10px';
+  t.style.boxShadow = '0 6px 18px rgba(0,0,0,0.25)';
+  t.style.minWidth = '220px';
+  t.style.fontFamily = 'system-ui,Segoe UI,Roboto,Arial';
+  t.innerHTML = `
+    <div style="font-weight:600;margin-bottom:6px">Thanks — submission successful</div>
+    <div style="font-size:13px;opacity:0.9;margin-bottom:10px">We'll contact you shortly. Choose next:</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button id="toastContinue" style="background:#4caf50;border:none;color:#fff;padding:6px 10px;border-radius:6px;cursor:pointer">Continue</button>
+      <button id="toastDonate" style="background:#ff9800;border:none;color:#fff;padding:6px 10px;border-radius:6px;cursor:pointer">Donate</button>
+      <button id="toastOther" style="background:#1976d2;border:none;color:#fff;padding:6px 10px;border-radius:6px;cursor:pointer">Other work</button>
+    </div>
+  `;
+  document.body.appendChild(t);
+  document.getElementById('toastContinue').addEventListener('click', ()=> { t.remove(); });
+  document.getElementById('toastDonate').addEventListener('click', ()=> { window.open(STRIPE_DONATE,'_blank'); });
+  document.getElementById('toastOther').addEventListener('click', ()=> { window.open(OTHER_WORK_URL,'_blank'); });
+}
+
+ // Skip: store skip flag and hide modal reliably
 skipInfo.addEventListener('click', () => {
   try{ localStorage.setItem(INFO_KEY, JSON.stringify({ skipped: true, ts: new Date().toISOString() })); }catch(e){ /* ignore */ }
   hideModal();
@@ -203,7 +235,9 @@ infoForm.addEventListener('submit', (e) => {
     submitBtn.disabled = false;
     submitBtn.textContent = 'Submit';
     setTimeout(()=>{ form.remove(); iframe.remove(); }, 800);
-    console.log('Form submitted to Google Form.');
+
+    // Show success toast with next actions
+    ensureSuccessToast();
   };
 
   // submit
@@ -217,6 +251,8 @@ infoForm.addEventListener('submit', (e) => {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Submit';
       form.remove(); iframe.remove();
+      // show toast anyway
+      ensureSuccessToast();
       console.warn('Form submit fallback used.');
     }
   }, 5000);

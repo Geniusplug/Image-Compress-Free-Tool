@@ -1,18 +1,15 @@
-// app.js — full client app: image compression UI + one-time info modal submitted to Google Form
-// AFTER SUBMIT shows a success toast with quick actions.
-// IMPORTANT: Replace FORM_ID and ENTRY_* with your Google Form values.
 
-const FORM_ID = '1voaXxzZQOkaAEd2mErnz0BPIwcOrp3QtB2cT1Y8NCOE';
+const FORM_ID = '1FAIpQLSf3JIWq3Q4_2C_wETEEKSbZK05xeLAUPeyxGX-q3oIFDfK0YA';
 const FORM_ACTION = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
 
-// Replace these with the entry.* names from your Google Form (inspect the form fields)
+// TODO: Replace these placeholders with the actual entry.* names from your form
 const ENTRY_NAME = 'entry.REPLACE_NAME_ID';
 const ENTRY_EMAIL = 'entry.REPLACE_EMAIL_ID';
 const ENTRY_WHATSAPP = 'entry.REPLACE_WHATSAPP_ID';
 const ENTRY_ADDRESS = 'entry.REPLACE_ADDRESS_ID';
 
 const STRIPE_DONATE = 'https://buy.stripe.com/5kAg0J0co1MF7Ic8wy';
-const OTHER_WORK_URL = 'https://www.romansarkar.com'; // change if you want a different link
+const OTHER_WORK_URL = 'https://www.romansarkar.com';
 
 // DOM refs
 const fileInput = document.getElementById('file');

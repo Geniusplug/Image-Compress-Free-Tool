@@ -1,1 +1,32 @@
-html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}main{max-width:900px;margin:24px auto;padding:16px}#dropzone{border:2px dashed #ccc;padding:28px;text-align:center;border-radius:8px;cursor:pointer}#dropzone input{display:none}#options{margin-top:12px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}#options label{display:flex;gap:8px;align-items:center}#results{margin-top:18px}.item{display:flex;gap:12px;align-items:center;padding:8px;border:1px solid #eee;border-radius:8px;margin-bottom:8px}.item img{max-width:120px;max-height:90px;object-fit:cover;border-radius:4px}.small{font-size:0.9rem;color:#555}button{background:#0366d6;color:white;border:0;padding:8px 12px;border-radius:6px;cursor:pointer}button:disabled{opacity:0.6;cursor:not-allowed}
+body {
+    font-family: Arial, sans-serif;
+}
+
+#upload-container {
+    width: 80%;
+    margin: auto;
+    text-align: center;
+}
+
+#file-input {
+    margin: 20px 0;
+}
+
+#preview-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.preview {
+    margin: 10px;
+}
+
+.preview img {
+    max-width: 100px;
+    max-height: 100px;
+}
+
+#progress-container {
+    margin-top: 20px;
+}

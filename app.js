@@ -4,7 +4,7 @@
 // - Replace CLIENT_SECRET below with the exact SECRET_TOKEN from Code.gs.
 
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxhFqmMlXly2vHmhDOOnmE52N8urOCTsYufsx89yPPmOeWlOtyZ7fe5dXIe3lP_EVmY4Q/exec';
-const CLIENT_SECRET = '1bPwK6COzJCSFBOLUuTjPkoqzMhZBnVkyC2_JMzNJMGxThOW65HAn1_nn'; // <<--- REPLACE THIS with your SECRET_TOKEN from Code.gs
+const CLIENT_SECRET = 'm3R7xQ9vW7782sZddddb6Yp'; // <<--- REPLACE THIS with your SECRET_TOKEN from Code.gs
 
 // DOM refs
 const fileInput = document.getElementById('file');

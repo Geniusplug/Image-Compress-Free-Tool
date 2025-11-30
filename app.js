@@ -6,7 +6,7 @@
 //    If you change the token in Code.gs, update CLIENT_SECRET here to the exact same string.
 
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxDfMvKSUDw5GxU2gH_iuA1NTa3U3FXEfzmjcO7iYOwdSH25dmhkDtbP0x6ckV0h4rT7w/exec';
-const CLIENT_SECRET = 'r8F3kL9pQw2Zx7VcN1tYb5GhR4sU0mW2'; // <<< KEEP IN SYNC with Code.gs SECRET_TOKEN
+const CLIENT_SECRET = '1bPwK6COzJCSFBOLUuTjPkoqzMhZBnVkyC2_JMzNJMGxThOW65HAn1_nn'; // <<< KEEP IN SYNC with Code.gs SECRET_TOKEN
 
 // DOM refs
 const fileInput = document.getElementById('file');

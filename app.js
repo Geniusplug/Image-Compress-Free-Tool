@@ -1,17 +1,16 @@
 
+
 const FORM_ID = '1FAIpQLSf3JIWq3Q4_2C_wETEEKSbZK05xeLAUPeyxGX-q3oIFDfK0YA';
 const FORM_ACTION = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
 
-// TODO: Replace these placeholders with the actual entry.* names from your form
-const ENTRY_NAME = 'entry.REPLACE_NAME_ID';
-const ENTRY_EMAIL = 'entry.REPLACE_EMAIL_ID';
-const ENTRY_WHATSAPP = 'entry.REPLACE_WHATSAPP_ID';
-const ENTRY_ADDRESS = 'entry.REPLACE_ADDRESS_ID';
+const ENTRY_NAME = 'entry.1748700631';
+const ENTRY_EMAIL = 'entry.747427006';
+const ENTRY_WHATSAPP = 'entry.1241740664';
+const ENTRY_ADDRESS = 'entry.1016216415';
 
 const STRIPE_DONATE = 'https://buy.stripe.com/5kAg0J0co1MF7Ic8wy';
 const OTHER_WORK_URL = 'https://www.romansarkar.com';
 
-// DOM refs
 const fileInput = document.getElementById('file');
 const dropzone = document.getElementById('dropzone');
 const chooseBtn = document.getElementById('chooseBtn');
@@ -132,7 +131,6 @@ function hideModal(){ infoModal.hidden = true; infoModal.style.display = 'none';
 
 function showInfoModalIfNeeded(){ if(!hasSubmittedInfo()){ showModal(); } }
 
-// create success toast (re-usable)
 function ensureSuccessToast(){
   if(document.getElementById('successToast')) return;
   const t = document.createElement('div');
@@ -163,17 +161,14 @@ function ensureSuccessToast(){
   document.getElementById('toastOther').addEventListener('click', ()=> { window.open(OTHER_WORK_URL,'_blank'); });
 }
 
- // Skip: store skip flag and hide modal reliably
 skipInfo.addEventListener('click', () => {
   try{ localStorage.setItem(INFO_KEY, JSON.stringify({ skipped: true, ts: new Date().toISOString() })); }catch(e){ /* ignore */ }
   hideModal();
 });
 
-// Form submit -> post to Google Form via hidden iframe (avoids CORS and login)
 infoForm.addEventListener('submit', (e) => {
   e.preventDefault();
 
-  // Basic check for placeholders
   if (!FORM_ID || FORM_ID.includes('REPLACE_FORM_ID')) {
     alert('Form ID not configured. Please set FORM_ID in app.js.');
     return;
@@ -233,14 +228,12 @@ infoForm.addEventListener('submit', (e) => {
     submitBtn.textContent = 'Submit';
     setTimeout(()=>{ form.remove(); iframe.remove(); }, 800);
 
-    // Show success toast with next actions
     ensureSuccessToast();
   };
 
   // submit
   form.submit();
 
-  // fallback in case onload doesn't fire
   setTimeout(()=> {
     if (document.body.contains(form)) {
       try{ localStorage.setItem(INFO_KEY, JSON.stringify({ name, email, whatsapp, address, ts: new Date().toISOString() })); }catch(e){}
@@ -248,14 +241,12 @@ infoForm.addEventListener('submit', (e) => {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Submit';
       form.remove(); iframe.remove();
-      // show toast anyway
       ensureSuccessToast();
       console.warn('Form submit fallback used.');
     }
   }, 5000);
 });
 
-// show modal after small delay if needed
 setTimeout(showInfoModalIfNeeded, 1200);
 
 // initial render

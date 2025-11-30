@@ -1,27 +1,235 @@
-document.getElementById('compress-button').addEventListener('click', async () => {
-    const input = document.getElementById('file-input');
-    const files = input.files;
-    const progressContainer = document.getElementById('progress-container');
-    progressContainer.innerHTML = ''; // Clear previous progress
+// Multi-image client-side compressor with previews and progress.
+// Works entirely in the browser (no uploads).
 
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        // Simulated compression process
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.src = e.target.result;
-            img.classList.add('preview');
-            document.getElementById('preview-container').appendChild(img);
-        };
-        reader.readAsDataURL(file);
+const fileInput = document.getElementById('file');
+const dropzone = document.getElementById('dropzone');
+const chooseBtn = document.getElementById('chooseBtn');
+const gallery = document.getElementById('gallery');
+const compressBtn = document.getElementById('compressBtn');
+const clearBtn = document.getElementById('clearBtn');
+const formatSelect = document.getElementById('format');
+const qualitySlider = document.getElementById('quality');
+const qualityVal = document.getElementById('qualityVal');
+const maxWidthInput = document.getElementById('maxWidth');
+const globalProgress = document.getElementById('globalProgress');
 
-        // Simulated progress
-        const progressDiv = document.createElement('div');
-        progressDiv.innerText = `Compressing ${file.name}...`;
-        progressContainer.appendChild(progressDiv);
-        setTimeout(() => {
-            progressDiv.innerText = `${file.name} compressed!`;
-        }, 1000 * (i + 1)); // Simulate 1 second for each
-    }
+let items = []; // {id, file, url, compressedBlob, status, progress}
+
+function uid(){ return Math.random().toString(36).slice(2,9) }
+
+function updateQualityLabel(){ qualityVal.textContent = parseFloat(qualitySlider.value).toFixed(2) }
+qualitySlider.addEventListener('input', updateQualityLabel);
+updateQualityLabel();
+
+chooseBtn.addEventListener('click', ()=> fileInput.click());
+fileInput.addEventListener('change', e => addFiles(e.target.files));
+
+['dragenter','dragover','dragleave','drop'].forEach(evt => {
+  dropzone.addEventListener(evt, e => {
+    e.preventDefault(); e.stopPropagation();
+    dropzone.classList.toggle('drag', evt === 'dragenter' || evt === 'dragover');
+  });
 });
+dropzone.addEventListener('drop', e => {
+  addFiles(e.dataTransfer.files);
+  dropzone.classList.remove('drag');
+});
+
+function addFiles(fileList){
+  const files = Array.from(fileList).filter(f => f.type && f.type.startsWith('image/'));
+  if(files.length === 0) return;
+  files.forEach(f => {
+    const id = uid();
+    const url = URL.createObjectURL(f);
+    items.push({id, file: f, url, compressedBlob: null, status: 'ready', progress: 0});
+  });
+  renderGallery();
+}
+
+function formatBytes(bytes){
+  if (!bytes) return '0 B';
+  const units = ['B','KB','MB','GB']; let i = 0;
+  while(bytes >= 1024 && i < units.length-1){ bytes /= 1024; i++ }
+  return `${bytes.toFixed(2)} ${units[i]}`;
+}
+
+function renderGallery(){
+  gallery.innerHTML = '';
+  if(items.length === 0){
+    const e = document.createElement('div'); e.className='empty'; e.textContent='No images selected';
+    gallery.appendChild(e); return;
+  }
+  items.forEach(it => {
+    const card = document.createElement('div'); card.className = 'card'; card.dataset.id = it.id;
+
+    const img = document.createElement('img'); img.className = 'thumb'; img.src = it.url; img.alt = it.file.name;
+    const meta = document.createElement('div'); meta.className = 'meta';
+    const h = document.createElement('h4'); h.textContent = it.file.name;
+    const s = document.createElement('div'); s.className = 'small'; s.innerHTML = `Original: ${formatBytes(it.file.size)} • ${it.file.type}`;
+    const actions = document.createElement('div'); actions.className = 'actions';
+
+    const downloadBtn = document.createElement('button'); downloadBtn.className='action-btn';
+    downloadBtn.textContent = it.compressedBlob ? 'Download' : 'Compress';
+    downloadBtn.addEventListener('click', () => {
+      if(it.compressedBlob) downloadBlob(it.compressedBlob, deriveName(it.file.name, it.compressedBlob.type));
+      else compressSingle(it.id);
+    });
+
+    const removeBtn = document.createElement('button'); removeBtn.className='action-btn remove';
+    removeBtn.textContent = 'Remove';
+    removeBtn.addEventListener('click', () => removeItem(it.id));
+
+    actions.appendChild(downloadBtn);
+    actions.appendChild(removeBtn);
+
+    const prog = document.createElement('div'); prog.className = 'progress';
+    const pos = document.createElement('div'); pos.className = 'pos'; pos.style.width = (it.progress||0) + '%';
+    prog.appendChild(pos);
+
+    meta.appendChild(h); meta.appendChild(s); meta.appendChild(actions); meta.appendChild(prog);
+
+    card.appendChild(img); card.appendChild(meta);
+    gallery.appendChild(card);
+  });
+}
+
+function removeItem(id){
+  const idx = items.findIndex(i => i.id === id);
+  if(idx === -1) return;
+  URL.revokeObjectURL(items[idx].url);
+  items.splice(idx,1);
+  renderGallery();
+}
+
+function deriveName(original, mime){
+  const base = original.replace(/\.[^/.]+$/, '');
+  if(!mime) return base + '-compressed.jpg';
+  if(mime.includes('jpeg')) return base + '-compressed.jpg';
+  if(mime.includes('png')) return base + '-compressed.png';
+  if(mime.includes('webp')) return base + '-compressed.webp';
+  return base + '-compressed.img';
+}
+
+async function compressSingle(id){
+  const it = items.find(x => x.id === id);
+  if(!it) return;
+  it.status = 'compressing'; it.progress = 0; renderGallery();
+  try{
+    const blob = await compressFile(it.file);
+    it.compressedBlob = blob;
+    it.status = 'done'; it.progress = 100;
+    renderGallery();
+  }catch(err){
+    it.status = 'error'; renderGallery();
+    console.error('compress error', err);
+    alert('Compression failed for ' + it.file.name);
+  }
+}
+
+// compress all selected images sequentially
+compressBtn.addEventListener('click', async () => {
+  if(items.length === 0) return alert('Add images first');
+  globalProgress.hidden = false;
+  const total = items.length;
+  let done = 0;
+  updateGlobal(0, total, done);
+  for(const it of items){
+    if(it.compressedBlob){ done++; updateGlobal(total, total, done); continue; }
+    it.status = 'compressing'; it.progress = 0; renderGallery();
+    try{
+      const blob = await compressFile(it.file, progress => {
+        it.progress = progress;
+        renderGallery();
+      });
+      it.compressedBlob = blob;
+      it.status = 'done';
+    }catch(e){
+      it.status = 'error';
+    }
+    done++;
+    updateGlobal(total, total, done);
+  }
+  renderGallery();
+  setTimeout(()=> globalProgress.hidden = true, 800);
+});
+
+function updateGlobal(total, expected, done){
+  const bar = globalProgress.querySelector('.pos');
+  const pct = Math.round((done/expected)*100);
+  if(bar) bar.style.width = pct + '%';
+  const info = globalProgress.querySelector('.global-info');
+  if(info) info.textContent = `${done} / ${expected}`;
+}
+
+// compressFile: returns a Blob of the compressed image
+async function compressFile(file, onProgress){
+  // load image
+  const img = await loadImage(file);
+  const desiredMaxWidth = parseInt(maxWidthInput.value) || img.width;
+  const scale = Math.min(1, desiredMaxWidth / img.width);
+  const targetW = Math.max(1, Math.round(img.width * scale));
+  const targetH = Math.max(1, Math.round(img.height * scale));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = targetW;
+  canvas.height = targetH;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, targetW, targetH);
+
+  const mime = formatSelect.value || 'image/jpeg';
+  const quality = parseFloat(qualitySlider.value) || 0.8;
+
+  // toBlob does not provide progress; we simulate a small progress for UX
+  if(onProgress) onProgress(30);
+
+  // try toBlob; fallback to jpeg if unsupported
+  const blob = await new Promise(resolve => {
+    canvas.toBlob(b => {
+      if(!b){
+        canvas.toBlob(b2 => resolve(b2), 'image/jpeg', quality);
+      }else{
+        resolve(b);
+      }
+    }, mime, quality);
+  });
+
+  if(onProgress) onProgress(100);
+  return blob;
+}
+
+function loadImage(file){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function downloadBlob(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=> URL.revokeObjectURL(url), 5000);
+}
+
+window.addEventListener('beforeunload', ()=>{
+  items.forEach(i => { try{ URL.revokeObjectURL(i.url)}catch{} });
+});
+
+// optional: clear all
+clearBtn.addEventListener('click', ()=>{
+  items.forEach(i=>{ try{ URL.revokeObjectURL(i.url) }catch{} });
+  items = []; renderGallery();
+});
+
+// initial render
+renderGallery();
